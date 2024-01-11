@@ -1,0 +1,31 @@
+From 47af5b2365a306532d1e0b786f0d7f9754f914cd Mon Sep 17 00:00:00 2001
+From: Peter Pentchev <roam@debian.org>
+Date: Mon, 1 Jun 2020 10:25:34 +0300
+Subject: [PATCH] Fix a memory leak on invalid input.
+
+---
+ src/drpm_decompstrm.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/src/drpm_decompstrm.c b/src/drpm_decompstrm.c
+index d885dcf..ec3115e 100644
+--- a/src/drpm_decompstrm.c
++++ b/src/drpm_decompstrm.c
+@@ -746,14 +746,14 @@ int readchunk_zstd(struct decompstrm *strm)
+             return DRPM_ERR_IO;
+     }
+ 
++    if (in_len == 0)
++        return DRPM_ERR_FORMAT;
++
+     size_t const buffOutSize = ZSTD_DStreamOutSize();
+     void* const buffOut = malloc(buffOutSize);
+     if (buffOut == NULL)
+         return DRPM_ERR_MEMORY;
+ 
+-    if (in_len == 0)
+-        return DRPM_ERR_FORMAT;
+-
+     ZSTD_inBuffer input = { in_buffer, in_len, 0 };
+ 
+     while (input.pos < input.size) {
